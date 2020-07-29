@@ -1,0 +1,20 @@
+[package]
+name = "mailpreview-cli"
+version = "0.1.0"
+authors = ["Adam Simpson <adam@heysparkbox.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mailparse = "0.13.0"
+
+[profile.release]
+opt-level = 'z'
+debug = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = false
