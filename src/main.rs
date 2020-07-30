@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .headers
         .get_first_value("Message-ID")
         .expect("Message-ID");
-    let file_name = format!("/tmp/{}", message_id);
+    let file_name = format!("/tmp/{}", message_id.replace("/", "-"));
     let body = return_body(mail).expect("parsed body");
 
     File::create(&file_name)?.write_all(body.as_bytes())?;
