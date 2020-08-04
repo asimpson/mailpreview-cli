@@ -4,12 +4,12 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Read;
 
-fn return_body(mail: ParsedMail) -> Result<String, MailParseError> {
+fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseError> {
     let mut body = String::new();
 
     if mail.subparts.len() > 0 {
         for m in mail.subparts.iter() {
-            if m.ctype.mimetype == "text/plain" {
+            if m.ctype.mimetype == format {
                 body = m.get_body()?;
             }
         }
@@ -29,8 +29,21 @@ fn return_path_from_cli() -> Result<String, String> {
     }
 }
 
+fn return_format_from_cli() -> String {
+    let format = std::env::args().nth(2);
+
+    if format == Some("text/plain".to_string()) {
+      return "text/plain".to_string()
+    } else if format == Some("text/html".to_string()) {
+      return "text/html".to_string()
+    } else {
+      return "text/plain".to_string()
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let file = return_path_from_cli()?;
+    let format = return_format_from_cli();
     let mut contents = String::new();
     File::open(file.trim())?.read_to_string(&mut contents)?;
 
@@ -40,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_first_value("Message-ID")
         .expect("Message-ID");
     let file_name = format!("/tmp/{}", message_id.replace("/", "-"));
-    let body = return_body(mail).expect("parsed body");
+    let body = return_body(mail, format).expect("parsed body");
 
     File::create(&file_name)?.write_all(body.as_bytes())?;
     println!("{}", &file_name);
