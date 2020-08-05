@@ -17,6 +17,11 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
         body = mail.get_body()?;
     }
 
+    if body.len() == 0 {
+      println!("No processable body in email");
+      std::process::exit(1);
+    }
+
     Ok(body)
 }
 
@@ -32,9 +37,7 @@ fn return_path_from_cli() -> Result<String, String> {
 fn return_format_from_cli() -> String {
     let format = std::env::args().nth(2);
 
-    if format == Some("text/plain".to_string()) {
-      return "text/plain".to_string()
-    } else if format == Some("text/html".to_string()) {
+    if format == Some("text/html".to_string()) {
       return "text/html".to_string()
     } else {
       return "text/plain".to_string()
