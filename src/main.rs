@@ -9,6 +9,13 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
 
     if mail.subparts.len() > 0 {
         for m in mail.subparts.iter() {
+            if m.ctype.mimetype == "multipart/alternative" {
+              for i in m.subparts.iter() {
+                if i.ctype.mimetype == format {
+                  body = i.get_body()?;
+                }
+              }
+            }
             if m.ctype.mimetype == format {
                 body = m.get_body()?;
             }
