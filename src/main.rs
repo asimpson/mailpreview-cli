@@ -4,17 +4,34 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Read;
 
+fn return_body_from_alternative(mail: &ParsedMail, format: &String) -> Result<String, MailParseError> {
+    let mut body = String::new();
+
+    for m in mail.subparts.iter() {
+      if &m.ctype.mimetype == format {
+        body = m.get_body()?;
+      }
+    }
+
+    Ok(body)
+}
+
 fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseError> {
     let mut body = String::new();
 
     if mail.subparts.len() > 0 {
         for m in mail.subparts.iter() {
-            if m.ctype.mimetype == "multipart/alternative" {
+            if m.ctype.mimetype == "multipart/related" {
+              // TODO make alternative extractor func
+              // TODO account for mixed
               for i in m.subparts.iter() {
-                if i.ctype.mimetype == format {
-                  body = i.get_body()?;
+                if i.ctype.mimetype == "multipart/alternative" {
+                  body = return_body_from_alternative(i, &format)?;
                 }
               }
+            }
+            if m.ctype.mimetype == "multipart/alternative" {
+                body = return_body_from_alternative(m, &format)?;
             }
             if m.ctype.mimetype == format {
                 body = m.get_body()?;
