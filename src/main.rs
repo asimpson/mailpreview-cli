@@ -4,13 +4,13 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Read;
 
-fn return_body_from_alternative(mail: &ParsedMail, format: &String) -> Result<String, MailParseError> {
+fn return_body_from_alternative(mail: &ParsedMail, format: &str) -> Result<String, MailParseError> {
     let mut body = String::new();
 
     for m in mail.subparts.iter() {
-      if &m.ctype.mimetype == format {
-        body = m.get_body()?;
-      }
+        if m.ctype.mimetype == format {
+            body = m.get_body()?;
+        }
     }
 
     Ok(body)
@@ -19,16 +19,16 @@ fn return_body_from_alternative(mail: &ParsedMail, format: &String) -> Result<St
 fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseError> {
     let mut body = String::new();
 
-    if mail.subparts.len() > 0 {
+    if !mail.subparts.is_empty() {
         for m in mail.subparts.iter() {
             if m.ctype.mimetype == "multipart/related" {
-              // TODO make alternative extractor func
-              // TODO account for mixed
-              for i in m.subparts.iter() {
-                if i.ctype.mimetype == "multipart/alternative" {
-                  body = return_body_from_alternative(i, &format)?;
+                // TODO make alternative extractor func
+                // TODO account for mixed
+                for i in m.subparts.iter() {
+                    if i.ctype.mimetype == "multipart/alternative" {
+                        body = return_body_from_alternative(i, &format)?;
+                    }
                 }
-              }
             }
             if m.ctype.mimetype == "multipart/alternative" {
                 body = return_body_from_alternative(m, &format)?;
@@ -41,9 +41,9 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
         body = mail.get_body()?;
     }
 
-    if body.len() == 0 {
-      println!("No processable body in email");
-      std::process::exit(1);
+    if body.is_empty() {
+        println!("No processable body in email");
+        std::process::exit(1);
     }
 
     Ok(body)
@@ -62,9 +62,9 @@ fn return_format_from_cli() -> String {
     let format = std::env::args().nth(2);
 
     if format == Some("text/html".to_string()) {
-      return "text/html".to_string()
+        "text/html".to_string()
     } else {
-      return "text/plain".to_string()
+        "text/plain".to_string()
     }
 }
 
