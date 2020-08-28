@@ -1,6 +1,6 @@
 [package]
 name = "mailpreview-cli"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Adam Simpson <adam@adamsimpson.net"]
 edition = "2018"
 
