@@ -72,6 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let file = return_path_from_cli()?;
     let format = return_format_from_cli();
     let mut contents = String::new();
+    let mut file_name = String::new();
     File::open(file.trim())?.read_to_string(&mut contents)?;
 
     let mail = parse_mail(contents.as_bytes())?;
@@ -79,7 +80,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         .headers
         .get_first_value("Message-ID")
         .expect("Message-ID");
-    let file_name = format!("/tmp/{}", message_id.replace("/", "-"));
+
+    let id_for_file_name = message_id.replace("/", "-");
+
+    if format == "text/html" {
+        file_name = format!("/tmp/{}.html", id_for_file_name)
+    }
+
+    if format == "text/plain" {
+        file_name = format!("/tmp/{}", id_for_file_name)
+    }
+
     let body = return_body(mail, format).expect("parsed body");
 
     File::create(&file_name)?.write_all(body.as_bytes())?;
