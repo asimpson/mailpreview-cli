@@ -22,7 +22,6 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
     if !mail.subparts.is_empty() {
         for m in mail.subparts.iter() {
             if m.ctype.mimetype == "multipart/related" {
-                // TODO make alternative extractor func
                 // TODO account for mixed
                 for i in m.subparts.iter() {
                     if i.ctype.mimetype == "multipart/alternative" {
