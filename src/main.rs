@@ -57,6 +57,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn simple() {
+        let body = "Content-Type: text/plain
+
+hello!";
+        let mail = parse_mail(body.as_bytes()).unwrap();
+        let body = return_body(mail, "text/plain".to_string()).unwrap();
+        assert_eq!(body.trim(), "hello!");
+    }
+
+    #[test]
     fn multipart_mixed() {
         let body = "Content-Type: multipart/mixed;
 	boundary=\"mixed\"
