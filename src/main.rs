@@ -27,6 +27,10 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
                     if i.ctype.mimetype == "multipart/alternative" {
                         body = return_body_from_alternative(i, &format)?;
                     }
+
+                    if i.ctype.mimetype == format {
+                        body = i.get_body()?;
+                    }
                 }
             }
             if m.ctype.mimetype == "multipart/alternative" {
@@ -46,6 +50,37 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
     }
 
     Ok(body)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn multipart_mixed() {
+        let body = "Content-Type: multipart/mixed;
+	boundary=\"mixed\"
+
+--mixed
+Content-Type: multipart/related;
+	boundary=\"related\"
+
+--related
+Content-Type: text/html
+
+hello!
+--related--
+
+--mixed
+Content-Type: text/plain
+
+bye!
+--mixed--
+";
+        let mail = parse_mail(body.as_bytes()).unwrap();
+        let body = return_body(mail, "text/html".to_string()).unwrap();
+        assert_eq!(body.trim(), "hello!");
+    }
 }
 
 fn return_path_from_cli() -> Result<String, String> {
