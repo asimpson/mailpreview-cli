@@ -22,7 +22,6 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
     if !mail.subparts.is_empty() {
         for m in mail.subparts.iter() {
             if m.ctype.mimetype == "multipart/related" {
-                // TODO account for mixed
                 for i in m.subparts.iter() {
                     if i.ctype.mimetype == "multipart/alternative" {
                         body = return_body_from_alternative(i, &format)?;
@@ -55,6 +54,89 @@ fn return_body(mail: ParsedMail, format: String) -> Result<String, MailParseErro
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn multipart_alt() {
+        let body = "Content-Type: multipart/mixed;
+	boundary=MIXED
+
+--MIXED
+Content-Type: multipart/related;
+	boundary=RELATED
+
+--RELATED
+Content-Type: multipart/alternative;
+	boundary=ALT
+
+--ALT
+Content-Type: text/plain
+
+plain!
+--ALT
+Content-Type: text/html
+Content-Transfer-Encoding: quoted-printable
+
+html!
+--ALT--
+
+--RELATED--
+
+--MIXED--
+";
+        let mail = parse_mail(body.as_bytes()).unwrap();
+        let body = return_body(mail, "text/plain".to_string()).unwrap();
+        assert_eq!(body.trim(), "plain!");
+    }
+
+    #[test]
+    fn related_format() {
+        let body = "Content-Type: multipart/alternative; boundary=ALT
+
+--ALT
+Content-Type: text/plain;
+
+plain!
+--ALT
+Content-Type: text/html
+
+html!
+--ALT--
+";
+        let mail = parse_mail(body.as_bytes()).unwrap();
+        let body = return_body(mail, "text/plain".to_string()).unwrap();
+        assert_eq!(body.trim(), "plain!");
+    }
+
+    #[test]
+    fn alt_alt() {
+        let body = "Content-Type: multipart/mixed; boundary=MIXED
+
+--MIXED
+Content-Type: multipart/alternative; boundary=ALT
+
+--ALT
+Content-Type: text/plain;
+
+plain!
+--ALT
+Content-Type: text/html
+
+html!
+--ALT
+Content-Type: text/calendar
+
+calendar!
+--ALT--
+--MIXED
+Content-Type: application/ics
+
+ics!
+--MIXED--
+";
+        let mail = parse_mail(body.as_bytes()).unwrap();
+        let body = return_body(mail, "text/plain".to_string()).unwrap();
+        assert_eq!(body.trim(), "plain!");
+    }
 
     #[test]
     fn simple() {
